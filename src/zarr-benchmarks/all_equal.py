@@ -1,14 +1,10 @@
-import zarr
 from zarr.util import all_equal
 import numpy as np
 import timeit
 import matplotlib.pyplot as plt
-from tempfile import TemporaryDirectory
-from itertools import product
 import click
-from typing import Literal, Union, Optional
-from numcodecs.abc import Codec
-import numcodecs
+import os
+
 DTYPE = 'uint8'
 
 def timed_all_equal(size, dtype):
@@ -29,9 +25,10 @@ def all_equal_plot():
 
 @click.command()
 def main():
+    fname_root = os.path.basename(__file__).split('.')[0]
     fig, _ =  all_equal_plot()
     plt.tight_layout()
-    fig.savefig('all_equal_benchmark.svg')
+    fig.savefig(f'{fname_root}.svg')
 
 if __name__ == '__main__':
     main()

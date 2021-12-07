@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 from tempfile import TemporaryDirectory
 from itertools import product
 import click
-from typing import Literal, Union, Optional
+from typing import Literal, Union, Optional, List
 from numcodecs.abc import Codec
 import numcodecs
+import os
 
 DTYPE = 'uint8'
 
@@ -16,8 +17,11 @@ def timed_array_write(write_empty_chunks: bool,
                       chunk_size: int,
                       num_chunks: int,
                       compressor: Optional[Codec],
-                      repeat=128):
-
+                      repeat=128) -> List[float]:
+    """
+    Create a zarr array with one chunk, initialize the chunk, 
+    then return the time required to write `value` to that chunk `repeat` times. 
+    """
     shape = (chunk_size, num_chunks)
     if write_value == 'random':
         write_value = np.random.randint(0, 255, size=shape, dtype=DTYPE)
@@ -72,11 +76,12 @@ def array_write_plot(compressor: Optional[Codec]):
 @click.command()
 @click.option('--compressor', type=str)
 def main(compressor: Optional[str]):
+    fname_root = os.path.basename(__file__).split('.')[0]
     if compressor is not None:
         compressor = numcodecs.registry.get_codec({'id': compressor.lower()})
     fig, _ = array_write_plot(compressor=compressor)
     plt.tight_layout()
-    fig.savefig(f'empy_chunks_benchmark_compressor-{compressor}.svg')
+    fig.savefig(f'{fname_root}_compressor-{compressor}.svg')
 
 if __name__ == '__main__':
     main()
