@@ -9,6 +9,8 @@ from typing import Literal, Union, Optional, List
 from numcodecs.abc import Codec
 import numcodecs
 import os
+from shutil import rmtree
+import atexit
 
 DTYPE = 'uint8'
 
@@ -17,7 +19,8 @@ def timed_array_write(write_empty_chunks: bool,
                       chunk_size: int,
                       num_chunks: int,
                       compressor: Optional[Codec],
-                      repeat=128) -> List[float]:
+                      repeat: int = 128,
+                      store: Optional[str] = None) -> List[float]:
     """
     Create a zarr array with one chunk, initialize the chunk, 
     then return the time required to write `value` to that chunk `repeat` times. 
@@ -28,18 +31,21 @@ def timed_array_write(write_empty_chunks: bool,
     else:
         write_value = np.zeros(shape, dtype=DTYPE) + write_value
 
-    with TemporaryDirectory() as store:
-        arr = zarr.open(zarr.NestedDirectoryStore(store),
-                        dtype=DTYPE,
-                        shape=shape,
-                        chunks=(shape[0], 1),
-                        write_empty_chunks=write_empty_chunks,
-                        compressor=compressor,
-                        fill_value=0)
-        # initialize the chunks
-        arr[:] = 255
-        result = timeit.repeat(lambda: arr.set_basic_selection(slice(None), write_value),
-                               repeat=repeat, number=1)
+    if store is None:
+        store = 'test.zarr'
+    arr = zarr.open(zarr.NestedDirectoryStore(store),
+                    dtype=DTYPE,
+                    shape=shape,
+                    chunks=(shape[0], 1),
+                    write_empty_chunks=write_empty_chunks,
+                    compressor=compressor,
+                    fill_value=0,
+                    mode='w')
+    # initialize the chunks
+    arr[:] = 255
+    result = timeit.repeat(lambda: arr.set_basic_selection(slice(None), write_value),
+                            repeat=repeat, number=1)
+    rmtree(store)
     return result
 
 def array_write_plot(compressor: Optional[Codec]):
