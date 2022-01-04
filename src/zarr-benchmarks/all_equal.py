@@ -7,8 +7,9 @@ import os
 
 DTYPE = 'uint8'
 
+
 def timed_all_equal(size, dtype):
-    data = np.random.randint(0,1, dtype=dtype, size=size)
+    data = np.random.randint(0, 1, dtype=dtype, size=size)
     return timeit.timeit(lambda: all_equal(0, data), number=10)
 
 def all_equal_plot():
@@ -26,9 +27,10 @@ def all_equal_plot():
 @click.command()
 def main():
     fname_root = os.path.basename(__file__).split('.')[0]
-    fig, _ =  all_equal_plot()
+    fig, _ = all_equal_plot()
     plt.tight_layout()
     fig.savefig(f'{fname_root}.svg')
+
 
 if __name__ == '__main__':
     main()
